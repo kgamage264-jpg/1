@@ -6,7 +6,7 @@ import numpy as np
 from datetime import datetime
 import plotly.graph_objs as go
 import requests
-import time
+from streamlit_autorefresh import st_autorefresh
 
 # ---------------------------
 # Indicator functions
@@ -120,7 +120,7 @@ def generate_signal(df, params):
         }
 
 # ---------------------------
-# Gemini AI explanation (optional, free)
+# Gemini AI explanation (optional)
 # ---------------------------
 def gemini_explain(signal_data, hf_token=None):
     if not hf_token:
@@ -154,23 +154,22 @@ st.set_page_config(page_title="Crypto Hybrid Bot", layout="wide")
 st.title("Hybrid Crypto Signal Bot — Free + Gemini AI Explanation")
 
 # Sidebar
-symbol=st.sidebar.text_input("Symbol (Binance)","BTC/USDT")
-timeframes=st.sidebar.multiselect("Timeframes",["1m","3m","5m","15m","30m","1h"],default=["1m","5m","15m"])
-max_bars=st.sidebar.number_input("History bars",500,50,2000,50)
-price_precision=st.sidebar.number_input("Price decimals",2,0,8)
-update_interval=st.sidebar.slider("Refresh (sec)",10,600,30)
-
-hf_token=st.sidebar.text_input("HuggingFace token (optional)", type="password")
+symbol=st.sidebar.text_input("Symbol (Binance)","BTC/USDT", key="symbol")
+timeframes=st.sidebar.multiselect("Timeframes",["1m","3m","5m","15m","30m","1h"],default=["1m","5m","15m"], key="timeframes")
+max_bars=st.sidebar.number_input("History bars", value=500, min_value=50, max_value=2000, step=50, key="max_bars")
+price_precision=st.sidebar.number_input("Price decimals", value=2, min_value=0, max_value=8, key="price_precision")
+update_interval=st.sidebar.slider("Refresh (sec)",10,600,30, key="update_interval")
+hf_token=st.sidebar.text_input("HuggingFace token (optional)", type="password", key="hf_token")
 
 st.sidebar.markdown("### Strategy Parameters")
-ema_short=st.sidebar.number_input("EMA Short",9,2,200)
-ema_long=st.sidebar.number_input("EMA Long",21,2,400)
-rsi_period=st.sidebar.number_input("RSI Period",14,2,50)
-rsi_overbought=st.sidebar.number_input("RSI Overbought",70)
-rsi_oversold=st.sidebar.number_input("RSI Oversold",30)
-atr_period=st.sidebar.number_input("ATR Period",14)
-atr_multiplier=st.sidebar.number_input("ATR multiplier for SL",1.5,0.1,10.0)
-tp_atr_factor=st.sidebar.number_input("TP factor",2.0,0.1,10.0)
+ema_short=st.sidebar.number_input("EMA Short", value=9, min_value=2, max_value=200, key="ema_short")
+ema_long=st.sidebar.number_input("EMA Long", value=21, min_value=2, max_value=400, key="ema_long")
+rsi_period=st.sidebar.number_input("RSI Period", value=14, min_value=2, max_value=50, key="rsi_period")
+rsi_overbought=st.sidebar.number_input("RSI Overbought", value=70, min_value=0, max_value=100, key="rsi_overbought")
+rsi_oversold=st.sidebar.number_input("RSI Oversold", value=30, min_value=0, max_value=100, key="rsi_oversold")
+atr_period=st.sidebar.number_input("ATR Period", value=14, min_value=1, max_value=100, key="atr_period")
+atr_multiplier=st.sidebar.number_input("ATR multiplier for SL", value=1.5, min_value=0.1, max_value=10.0, step=0.1, key="atr_multiplier")
+tp_atr_factor=st.sidebar.number_input("TP factor", value=2.0, min_value=0.1, max_value=10.0, step=0.1, key="tp_atr_factor")
 
 params={
     'ema_short':int(ema_short),
@@ -188,7 +187,6 @@ exchange=get_exchange()
 placeholder=st.empty()
 
 # Auto-refresh
-from streamlit_autorefresh import st_autorefresh
 count = st_autorefresh(interval=update_interval*1000, limit=None, key="auto")
 
 with placeholder.container():
